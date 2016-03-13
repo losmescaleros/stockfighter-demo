@@ -1,0 +1,11 @@
+{
+    "name": "stockfighter-example",
+    "version": "1.0.0",
+    "description": "stockfighter-example",
+    "dependencies": {
+        "socket.io": "latest",
+        "express": "latest",
+        "jade": "latest"
+    },
+    "author": "losmescaleros"
+}
