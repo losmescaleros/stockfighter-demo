@@ -1,0 +1,112 @@
+<html>
+	<head>
+        <meta charset="utf-8">
+
+        <style>
+        	  			
+        </style>
+        <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+        <script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+	    
+		<div>
+			<form id="form-account">
+				<label for="account">Account</label>
+				<input type="text" name="account" id="input-account" />
+				<label for="venue">Venue</label>
+				<input type="text" name="venue" id="venu" />
+				<label for="symbol">Symbol</label>
+				<input type="text" name="symbol" id="input-symbol" />
+				<button id="btn-connect">connect</button>
+			</form>
+		</div>
+		<div>
+			<p id="symbol"></p>
+			<p id="last"></p>
+			
+			<button id="btn-disconnect">disconnect</button>
+		</div>
+
+        <div id="graphContainer" style="width:100%; height: 300px;"></div>
+
+        <script type="text/javascript">
+			(function() {
+				var lastDataPoints = [];
+				var lastSizeDataPoints = [];
+				var chart = chart = new CanvasJS.Chart("graphContainer", 
+				{
+					title: {text: "Quantity and Value of Last Trade"},
+					toolTip: {
+						shared: true
+					},
+					axisY: {
+						prefix: '$',
+						includeZero: false
+					},
+					data: [
+					// 'last' data points
+					{
+						type: "line",
+						dataPoints: lastDataPoints,
+						xValueType: "dateTime",
+						name: "Price of last trade",
+						showInLegend: true
+					},
+					{
+						type: "line",
+						dataPoints: lastSizeDataPoints,
+						xValueType: "dateTime",
+						name: "Quantity of last trade",
+						showInLegend: true
+					}]
+				});
+				// Bind the connect and subsequently disconnect buttons
+	        	$('#btn-connect').on('click', function(e){
+	        		e.preventDefault();
+	        		var accountInfo = $("#form-account").serialize();
+	        		var socket = io.connect('http://localhost:3000',
+	        			{
+	        				query: accountInfo
+	        			});
+	        		console.log('Attempting to connect to socket...');
+
+	        		socket.on('connected', function(){
+	        			console.log('Connected to socket');
+	        		});
+
+	        		socket.on('message', function (msg) {
+	        		    // console.log('Got message: ' + data);
+	        		    console.log(msg);
+	        		    $('#symbol').text(msg.symbol);
+	        		    $('#last').text(msg.last);
+	        		    var quoteTime = new Date(Date.parse(msg.quoteTime));
+
+	        		    lastDataPoints.push({
+	        		    	x: quoteTime,
+	        		    	y: msg.last
+	        		    });
+
+	        		    lastSizeDataPoints.push({
+	        		    	x: quoteTime,
+	        		    	y: msg.lastSize
+	        		    })
+
+	        		    chart.render();
+	        		    
+	        		});
+
+	        		$('#btn-disconnect').on('click', function(){
+	        			socket.disconnect();
+	        			console.log('Disconnected from socket');
+	        		});
+	        	});      	
+
+	        	chart.render();
+			})();
+        	
+        </script>                       
+    </body>
+	
+</html>
